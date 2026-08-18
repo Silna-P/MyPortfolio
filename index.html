@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Silna P — ERPNext / Frappe Developer</title>
+<meta name="description" content="Silna P — ERPNext & Frappe Developer. Custom DocTypes, automation, dashboards, and REST API integrations for enterprise clients.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12161c;
+    --panel:#1a212b;
+    --panel-2:#212a36;
+    --line:#2b3542;
+    --fog:#e9edf2;
+    --steel:#8b96a5;
+    --steel-dim:#5c6774;
+    --amber:#f2a93b;
+    --teal:#3fb8a6;
+    --radius:10px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--ink);
+    color:var(--fog);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif; font-weight:600; letter-spacing:-0.01em;}
+  a{color:inherit; text-decoration:none;}
+  ::selection{background:var(--amber); color:var(--ink);}
+
+  /* subtle grid texture */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size:48px 48px;
+    pointer-events:none;
+    z-index:0;
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 90%);
+  }
+
+  .wrap{max-width:1040px; margin:0 auto; padding:0 24px; position:relative; z-index:1;}
+
+  /* ---------- top status bar ---------- */
+  .statusbar{
+    border-bottom:1px solid var(--line);
+    background:rgba(18,22,28,0.85);
+    backdrop-filter:blur(8px);
+    position:sticky; top:0; z-index:50;
+  }
+  .statusbar .wrap{display:flex; align-items:center; justify-content:space-between; padding-top:14px; padding-bottom:14px;}
+  .brand{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; letter-spacing:0.02em;}
+  .brand span{color:var(--amber);}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--teal);
+    border:1px solid rgba(63,184,166,0.35); background:rgba(63,184,166,0.08);
+    padding:5px 12px; border-radius:999px;
+  }
+  .status-pill::before{
+    content:""; width:7px; height:7px; border-radius:50%; background:var(--teal);
+    box-shadow:0 0 0 3px rgba(63,184,166,0.18);
+    animation:pulse 2s infinite ease-in-out;
+  }
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:0.35;}}
+  .resume-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber);
+    border:1px solid rgba(242,169,59,0.35); padding:5px 12px; border-radius:999px;
+    display:none;
+  }
+  .resume-pill:hover{background:rgba(242,169,59,0.08);}
+  @media(min-width:480px){ .resume-pill{display:inline-flex;} }
+  nav{display:none; gap:24px; font-size:13.5px; color:var(--steel);}
+  nav a:hover{color:var(--fog);}
+  @media(min-width:860px){ nav{display:flex;} }
+
+  /* ---------- hero ---------- */
+  .hero{padding:88px 0 56px;}
+  .hero .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--steel-dim);
+    margin-bottom:18px; display:flex; align-items:center; gap:10px;
+  }
+  .hero .eyebrow .caret{color:var(--amber); animation:blink 1.1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  .hero h1{font-size:clamp(34px,5.4vw,58px); line-height:1.08; max-width:760px;}
+  .hero h1 .accent{color:var(--amber);}
+  .hero p.lede{
+    margin-top:22px; max-width:600px; color:var(--steel); font-size:17px;
+  }
+  .hero-top{display:grid; grid-template-columns:1fr; gap:40px; align-items:start;}
+  @media(min-width:860px){ .hero-top{grid-template-columns:1.3fr 0.85fr;} }
+  .badge{
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
+    overflow:hidden; max-width:320px;
+  }
+  .badge-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px; border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--steel-dim);
+  }
+  .badge-photo{
+    aspect-ratio:4/5; width:100%; overflow:hidden; position:relative;
+    filter:grayscale(0.25) contrast(1.03);
+  }
+  .badge-photo img{width:100%; height:100%; object-fit:cover; display:block;}
+  .badge-photo::after{
+    content:""; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(18,22,28,0) 60%, rgba(18,22,28,0.65) 100%);
+  }
+  .badge-body{padding:16px 16px 18px;}
+  .badge-name{font-family:'Space Grotesk',sans-serif; font-size:19px; font-weight:700;}
+  .badge-role{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber); margin-top:3px;}
+  .badge-meta{margin-top:14px; display:flex; flex-direction:column; gap:8px;}
+  .badge-meta .row{display:flex; justify-content:space-between; font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--steel-dim); border-top:1px dashed var(--line); padding-top:8px;}
+  .badge-meta .row span:last-child{color:var(--steel);}
+  .hero .actions{display:flex; flex-wrap:wrap; gap:12px; margin-top:32px;}
+  .btn{
+    font-family:'IBM Plex Mono',monospace; font-size:13.5px;
+    padding:12px 20px; border-radius:8px; border:1px solid var(--line);
+    display:inline-flex; align-items:center; gap:8px; transition:all .15s ease;
+  }
+  .btn-primary{background:var(--amber); color:#1a1400; border-color:var(--amber); font-weight:500;}
+  .btn-primary:hover{background:#ffbd52;}
+  .btn-ghost{color:var(--fog);}
+  .btn-ghost:hover{border-color:var(--steel); background:var(--panel);}
+
+  /* ---------- stats dashboard row (signature element) ---------- */
+  .dashboard{
+    margin-top:56px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--panel);
+    overflow:hidden;
+  }
+  .dashboard-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 18px; border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--steel-dim);
+  }
+  .dashboard-head .dots{display:flex; gap:6px;}
+  .dashboard-head .dots span{width:8px; height:8px; border-radius:50%; background:var(--line);}
+  .stat-grid{display:grid; grid-template-columns:repeat(2,1fr);}
+  @media(min-width:640px){ .stat-grid{grid-template-columns:repeat(4,1fr);} }
+  .stat{
+    padding:22px 20px; border-right:1px solid var(--line); border-bottom:1px solid var(--line);
+  }
+  .stat:nth-child(2n){border-right:none;}
+  @media(min-width:640px){
+    .stat{border-bottom:none;}
+    .stat:nth-child(2n){border-right:1px solid var(--line);}
+    .stat:nth-child(4n){border-right:none;}
+  }
+  .stat .num{font-family:'Space Grotesk',sans-serif; font-size:30px; font-weight:700; color:var(--fog);}
+  .stat .num .unit{color:var(--amber); font-size:20px;}
+  .stat .label{margin-top:4px; font-size:12.5px; color:var(--steel); font-family:'IBM Plex Mono',monospace;}
+
+  /* ---------- section shell ---------- */
+  section{padding:72px 0;}
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+  @media (prefers-reduced-motion: reduce){
+    .reveal{opacity:1; transform:none; transition:none;}
+  }
+  .section-head{display:flex; align-items:baseline; gap:12px; margin-bottom:36px;}
+  .section-head .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--amber);
+    border:1px solid rgba(242,169,59,0.3); padding:3px 9px; border-radius:4px;
+  }
+  .section-head h2{font-size:26px;}
+  .rule{height:1px; background:var(--line); border:none; margin:0;}
+
+  /* ---------- experience (deployment log) ---------- */
+  .log{position:relative; padding-left:28px; border-left:1px solid var(--line);}
+  .log-entry{position:relative; padding-bottom:40px;}
+  .log-entry:last-child{padding-bottom:0;}
+  .log-entry::before{
+    content:""; position:absolute; left:-33.5px; top:4px;
+    width:9px; height:9px; border-radius:50%; background:var(--ink);
+    border:2px solid var(--teal);
+  }
+  .log-entry.current::before{background:var(--teal); box-shadow:0 0 0 4px rgba(63,184,166,0.18);}
+  .log-meta{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--steel-dim); margin-bottom:6px;}
+  .log-meta .current-tag{color:var(--teal);}
+  .log-entry h3{font-size:18px;}
+  .log-entry .org{color:var(--steel); font-size:14.5px; margin-top:2px;}
+  .log-entry ul{margin-top:14px; padding-left:18px; color:var(--steel);}
+  .log-entry li{margin-bottom:8px; font-size:14.5px;}
+  .log-entry li::marker{color:var(--amber);}
+
+  /* ---------- projects (modules) ---------- */
+  .modules{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:720px){ .modules{grid-template-columns:1fr 1fr;} }
+  .module{
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
+    padding:24px; transition:border-color .15s ease, transform .15s ease;
+  }
+  .module:hover{border-color:var(--steel-dim); transform:translateY(-2px);}
+  .module-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .module .idx{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--steel-dim);}
+  .module h3{font-size:18px;}
+  .module p{color:var(--steel); font-size:14.5px; margin-top:10px;}
+  .module-field{margin-top:14px; padding-top:14px; border-top:1px dashed var(--line);}
+  .module-field:first-of-type{border-top:none; padding-top:0; margin-top:16px;}
+  .module-field .f-label{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber); letter-spacing:0.04em;}
+  .module-field p{margin-top:5px; color:var(--fog); font-size:14px;}
+  .tags{display:flex; flex-wrap:wrap; gap:8px; margin-top:16px;}
+  .tag-chip{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--steel);
+    border:1px solid var(--line); padding:3px 9px; border-radius:4px; background:var(--panel-2);
+  }
+  .module-link{display:inline-flex; align-items:center; gap:6px; margin-top:16px; font-size:13px; color:var(--amber); font-family:'IBM Plex Mono',monospace;}
+  .module-link:hover{text-decoration:underline;}
+
+  /* ---------- skills (system modules grid) ---------- */
+  .skill-groups{display:grid; grid-template-columns:1fr; gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  @media(min-width:720px){ .skill-groups{grid-template-columns:repeat(3,1fr);} }
+  .skill-group{background:var(--panel); padding:22px;}
+  .skill-group .g-label{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--amber); margin-bottom:12px; letter-spacing:0.04em;}
+  .skill-group ul{list-style:none;}
+  .skill-group li{font-size:14px; color:var(--fog); padding:5px 0; border-bottom:1px dashed var(--line);}
+  .skill-group li:last-child{border-bottom:none;}
+
+  /* ---------- profile summary panel ---------- */
+  .profile-panel{
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
+    padding:28px 30px; position:relative; border-left:2px solid var(--teal);
+  }
+  .profile-panel p{font-size:16px; color:var(--fog); max-width:760px; line-height:1.75;}
+
+  /* ---------- education / certs ---------- */
+  .split{display:grid; grid-template-columns:1fr; gap:16px;}
+  @media(min-width:720px){ .split{grid-template-columns:1fr 1fr;} }
+  .card-box{border:1px solid var(--line); border-radius:var(--radius); background:var(--panel); padding:22px;}
+  .card-box h3{font-size:15px; font-family:'IBM Plex Mono',monospace; color:var(--steel); margin-bottom:14px; letter-spacing:0.03em;}
+  .card-box .item{padding:10px 0; border-bottom:1px solid var(--line); font-size:14.5px;}
+  .card-box .item:last-child{border-bottom:none;}
+  .card-box .item .sub{color:var(--steel-dim); font-size:13px; margin-top:2px;}
+
+  .cert-grid{display:grid; grid-template-columns:1fr; gap:14px;}
+  @media(min-width:720px){ .cert-grid{grid-template-columns:1fr 1fr;} }
+  .cert-card{
+    display:block; border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
+    padding:18px 20px; transition:border-color .15s ease, transform .15s ease;
+  }
+  a.cert-card:hover{border-color:var(--amber); transform:translateY(-2px);}
+  .cert-top{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;}
+  .cert-issuer{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--teal); letter-spacing:0.03em;}
+  .cert-view{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--amber);}
+  .cert-card h3{font-size:15px; line-height:1.4;}
+  .cert-meta{margin-top:8px; font-size:12.5px; color:var(--steel-dim); font-family:'IBM Plex Mono',monospace;}
+
+  .achievement-strip{margin-top:16px;}
+  .achievement-strip a{
+    display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    border:1px dashed rgba(242,169,59,0.4); border-radius:var(--radius);
+    padding:16px 20px; font-size:14px; color:var(--fog);
+    background:rgba(242,169,59,0.05); transition:background .15s ease;
+  }
+  .achievement-strip a:hover{background:rgba(242,169,59,0.1);}
+  .ach-tag{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--amber);
+    border:1px solid rgba(242,169,59,0.4); padding:2px 8px; border-radius:4px; flex-shrink:0;
+  }
+  .achievement-strip .cert-view{margin-left:auto;}
+
+  /* ---------- footer / contact console ---------- */
+  footer{padding:64px 0 48px; border-top:1px solid var(--line);}
+  .contact-panel{
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--panel);
+    padding:36px; text-align:center;
+  }
+  .contact-panel h2{font-size:26px;}
+  .contact-panel p{color:var(--steel); margin-top:10px;}
+  .contact-links{display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:26px;}
+  .foot-note{text-align:center; margin-top:28px; font-size:12.5px; color:var(--steel-dim); font-family:'IBM Plex Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div class="statusbar">
+  <div class="wrap">
+    <div class="brand">SILNA<span>_</span>P</div>
+    <nav>
+      <a href="#profile">profile</a>
+      <a href="#experience">experience</a>
+      <a href="#projects">projects</a>
+      <a href="#certifications">certifications</a>
+      <a href="#contact">contact</a>
+    </nav>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <a class="resume-pill" href="assets/Silna_P__Resume.pdf" target="_blank" rel="noopener">⭳ Resume</a>
+      
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <section class="hero" style="padding-bottom:0;">
+    <div class="hero-top">
+      <div>
+        <div class="eyebrow">~/silna-p <span class="caret">▍</span> ERPNext &amp; Frappe Developer · Dubai, UAE</div>
+        <h1>I build the <span class="accent">back office</span><br>enterprises run on.</h1>
+        <p class="lede">Custom DocTypes, automated workflows, and dashboards on the Frappe Framework — turning messy manual processes into systems that just work.
+          I build practical business systems with ERPNext, Frappe, Python & JavaScript. <br><br><span style="color:white;"> <b> Healthcare → Logistics → E-commerce → Business Operations</b></span></p>
+        <div class="actions">
+          <a class="btn btn-primary" href="mailto:silnashil300@gmail.com">✉ Email me</a>
+          <a class="btn btn-ghost" href="assets/Silna_P__Resume.pdf" target="_blank" rel="noopener">⭳ Download Resume</a>
+          <a class="btn btn-ghost" href="https://www.linkedin.com/in/silna-p" target="_blank" rel="noopener">LinkedIn ↗</a>
+          <a class="btn btn-ghost" href="https://github.com/Silna-P" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </div>
+
+      <div class="badge">
+
+        <div class="badge-photo"><img src="assets/silna_picture.png" alt="Silna P"></div>
+        <div class="badge-body">
+          <div class="badge-name">Silna P</div>
+          <div class="badge-role">ERPNext / Frappe Developer</div>
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <div class="dashboard-head">
+        
+        <div class="dots"><span></span><span></span><span></span></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="num">9<span class="unit">mo</span></div><div class="label">AT FYNAC.COM LLC</div></div>
+        <div class="stat"><div class="num">20<span class="unit">+</span></div><div class="label">CLIENTS DELIVERED</div></div>
+        <div class="stat"><div class="num">3</div><div class="label">INDUSTRIES SERVED</div></div>
+        <div class="stat"><div class="num">2<span class="unit">yr</span></div><div class="label">TOTAL EXPERIENCE</div></div>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="profile" class="reveal">
+    <div class="section-head"><span class="tag">01</span><h2>Profile</h2></div>
+    <div class="profile-panel">
+      <p>ERPNext Developer with 9 months of experience in ERPNext implementation, customization, and automation using the Frappe Framework, plus 1 year as a C++ Graduate Apprentice Trainee at DRDO. Hands-on with custom DocTypes, Server &amp; Client Scripts, Print Formats, automated workflows, and REST API integrations — delivering solutions for 20+ enterprise clients across healthcare, finance, and logistics.</p>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="experience" class="reveal">
+    <div class="section-head"><span class="tag">02</span><h2>Experience</h2></div>
+    <div class="log">
+
+      <div class="log-entry current">
+        <div class="log-meta">NOV 2025 — <span class="current-tag">PRESENT</span></div>
+        <h3>ERPNext Developer</h3>
+        <div class="org">FYNAC.COM LLC · Dubai Healthcare City, UAE</div>
+        <ul>
+          <li>Delivered end-to-end ERPNext customizations for 20+ enterprise clients across healthcare, finance, and logistics — full lifecycle from requirements to go-live.</li>
+          <li>Built custom DocTypes, automated workflows, and KPI dashboards, cutting manual processing time through conditional routing and business logic.</li>
+          <li>Engineered REST API integrations connecting ERPNext to payment gateways, logistics APIs, and accounting software; built branded Print Formats with Jinja2 and HTML/CSS.</li>
+          <li>Optimized database performance through query tuning, indexing, and caching, sharply reducing report generation time on large datasets.</li>
+        </ul>
+      </div>
+
+      <div class="log-entry">
+        <div class="log-meta">MAR 2024 — MAR 2025</div>
+        <h3>Graduate Apprentice Trainee</h3>
+        <div class="org">Naval Physical and Oceanographic Laboratory (DRDO) · Kochi, India</div>
+        <ul>
+          <li>Developed interactive HMI applications in C++ and Qt Creator for real-time naval data visualization.</li>
+          <li>Ran software QA with Parasoft C/C++ Test, Cppcheck, and SonarQube, catching defects before release.</li>
+          <li>Built automated GUI test suites with Squish, cutting manual testing effort per release cycle.</li>
+        </ul>
+      </div>
+
+      <div class="log-entry">
+        <div class="log-meta">AUG 2023 — DEC 2023</div>
+        <h3>Python Developer Intern</h3>
+        <div class="org">Techmaghi Ltd · Ernakulam, Kerala, India</div>
+        <ul>
+          <li>Built Python backend REST APIs with Django and shipped them to production.</li>
+          <li>Debugged across multiple modules and helped design the database schema.</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="projects" class="reveal">
+    <div class="section-head"><span class="tag">03</span><h2>Projects</h2></div>
+    <div class="modules">
+
+      <div class="module">
+        <div class="module-top"><span class="idx">MOD.01</span></div>
+        <h3>React-Based Frappe Page Builder</h3>
+        <div class="module-field">
+          <div class="f-label">PROBLEM</div>
+          <p>Frappe had no visual way to build or edit ERP pages — every layout change meant writing code from scratch.</p>
+        </div>
+        <div class="module-field">
+          <div class="f-label">MY CONTRIBUTION</div>
+          <p>Built and shipped the app solo: a drag-and-drop page builder with form validation and state management, packaged as a standalone Frappe app.</p>
+        </div>
+        <div class="module-field">
+          <div class="f-label">RESULT</div>
+          <p>Shipped and maintained as an independent production tool, reused across ERP page-building work.</p>
+        </div>
+        <div class="tags">
+          <span class="tag-chip">React.js</span>
+          <span class="tag-chip">Frappe</span>
+          <span class="tag-chip">esbuild</span>
+          <span class="tag-chip">GitHub CI</span>
+        </div>
+        <a class="module-link" href="https://github.com/Silna-P/Page-Builder" target="_blank" rel="noopener">View source ↗</a>
+      </div>
+
+      <div class="module">
+        <div class="module-top"><span class="idx">MOD.02</span></div>
+        <h3>HR Employee Reports Dashboard</h3>
+        <div class="module-field">
+          <div class="f-label">PROBLEM</div>
+          <p>HR and Finance had to cross-check attendance, salary deductions, and checkin/checkout data across separate spreadsheets by hand.</p>
+        </div>
+        <div class="module-field">
+          <div class="f-label">MY CONTRIBUTION</div>
+          <p>Built a multi-view dashboard on live Frappe REST API data, coding the deduction logic for late entry, early exit, and extra breaks, plus per-employee holiday rules, RBAC, and Excel export.</p>
+        </div>
+        <div class="module-field">
+          <div class="f-label">RESULT</div>
+          <p>Used daily by HR and Finance — replaced manual spreadsheet cross-checking with a single live view.</p>
+        </div>
+        <div class="tags">
+          <span class="tag-chip">Frappe REST API</span>
+          <span class="tag-chip">JavaScript</span>
+          <span class="tag-chip">RBAC</span>
+          <span class="tag-chip">Excel Export</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="skills" class="reveal">
+    <div class="section-head"><span class="tag">04</span><h2>Skills</h2></div>
+    <div class="skill-groups">
+      <div class="skill-group">
+        <div class="g-label">ERPNEXT / FRAPPE</div>
+        <ul>
+          <li>Custom DocTypes</li>
+          <li>Server &amp; Client Scripts</li>
+          <li>Workflows &amp; Print Formats</li>
+          <li>Dashboards &amp; KPIs</li>
+          <li>RBAC &amp; permissions</li>
+          <li>Data migration</li>
+        </ul>
+      </div>
+      <div class="skill-group">
+        <div class="g-label">LANGUAGES &amp; WEB</div>
+        <ul>
+          <li>Python · JavaScript · SQL</li>
+          <li>C / C++</li>
+          <li>React.js</li>
+          <li>REST APIs · JSON · Jinja2</li>
+          <li>HTML / CSS</li>
+        </ul>
+      </div>
+      <div class="skill-group">
+        <div class="g-label">DATA &amp; TOOLING</div>
+        <ul>
+          <li>MariaDB / MySQL</li>
+          <li>Query optimization, indexing, caching</li>
+          <li>Git / GitHub</li>
+          <li>Linux · Bench</li>
+          <li>Parasoft, Cppcheck, SonarQube, Squish</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+
+  <section id="certifications" class="reveal">
+    <div class="section-head"><span class="tag">05</span><h2>Certifications &amp; Achievements</h2></div>
+
+    <div class="card-box" style="margin-bottom:16px;">
+      <h3>EDUCATION</h3>
+      <div class="item">
+        B.Tech, Computer Science and Engineering
+        <div class="sub">Royal College of Engineering and Technology, Thrissur · 2019 – 2023 · CGPA 7.75</div>
+      </div>
+    </div>
+
+    <div class="cert-grid">
+      <a class="cert-card" href="assets/CKLERCGE23031630215.pdf" target="_blank" rel="noopener">
+        <div class="cert-top"><span class="cert-issuer">Ministry of Education · Skill India</span><span class="cert-view">View ↗</span></div>
+        <h3>National Apprenticeship Training — Certificate of Proficiency</h3>
+        <div class="cert-meta">Naval Physical &amp; Oceanographic Laboratory, DRDO · Mar 2024 – Mar 2025 · rated "Very Good"</div>
+      </a>
+
+      <a class="cert-card" href="assets/silna-p-certificate (1).pdf" target="_blank" rel="noopener">
+        <div class="cert-top"><span class="cert-issuer">Dubai Future Foundation</span><span class="cert-view">View ↗</span></div>
+        <h3>One Million Prompters — Prompt Engineering for AI Systems</h3>
+        <div class="cert-meta">Dubai Centre for Artificial Intelligence, in line with the Dubai AI Blueprint</div>
+      </a>
+
+      <a class="cert-card" href="assets/Qt_Certificate.pdf" target="_blank" rel="noopener">
+        <div class="cert-top"><span class="cert-issuer">Udemy</span><span class="cert-view">View ↗</span></div>
+        <h3>Qt 6 Core Beginners with C++</h3>
+        <div class="cert-meta">15.5 hours · completed May 2024</div>
+      </a>
+
+      <a class="cert-card" href="assets/Silna P (2).pdf" target="_blank" rel="noopener">
+        <div class="cert-top"><span class="cert-issuer">Techmaghi</span><span class="cert-view">View ↗</span></div>
+        <h3>Python Developer Program</h3>
+        <div class="cert-meta">3-month training, STEM.org-accredited · Jan 2024</div>
+      </a>
+
+      <a class="cert-card" href="assets/Silna P_Certificate.pdf" target="_blank" rel="noopener">
+        <div class="cert-top"><span class="cert-issuer">Technovalley Software</span><span class="cert-view">View ↗</span></div>
+        <h3>Career Orientation on Cyber Security</h3>
+        <div class="cert-meta">5-day program · June 2025</div>
+      </a>
+
+      <div class="cert-card" style="opacity:0.85;">
+        <div class="cert-top"><span class="cert-issuer">Infosys Springboard</span></div>
+        <h3>Python Programming Certification</h3>
+        <div class="cert-meta">Infosys</div>
+      </div>
+    </div>
+
+    <div class="achievement-strip">
+      <a href="assets/IMG-20230410-WA0005.jpg" target="_blank" rel="noopener">
+        <span class="ach-tag">ACHIEVEMENT</span>
+        INNOVEX 2023 — Certificate of Appreciation, IEEE Royal College of Engineering &amp; Technology <span class="cert-view">View ↗</span>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<footer id="contact">
+  <div class="wrap">
+    <div class="contact-panel">
+      <h2>Let's build something.</h2>
+      <p>Open to ERPNext/Frappe roles and enterprise automation work — reach out any time.</p>
+      <div class="contact-links">
+        <a class="btn btn-primary" href="mailto:silnashil300@gmail.com">✉ silnashil300@gmail.com</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/silna-p" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a class="btn btn-ghost" href="https://github.com/Silna-P" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </div>
+    <div class="foot-note">&copy; <span id="year"></span> Silna P — built with HTML, CSS &amp; JS, deployed on GitHub Pages.</div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, {threshold:0.12});
+    revealEls.forEach(el=>io.observe(el));
+  } else {
+    revealEls.forEach(el=>el.classList.add('in'));
+  }
+</script>
+</body>
+</html>
