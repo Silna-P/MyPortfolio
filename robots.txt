@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://silna-p.github.io/MyPortfolio/sitemap.xml
